@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: qwen2-clinical-recommendations
+    volumes:
+      - .:/app
+    shm_size: '2gb'
+    command: python app/main.py
