@@ -6,7 +6,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 class ModelHandler:
     def __init__(self):
         self.model_name = "Qwen/Qwen2.5-7B"
-        self.model_path = "/app/models/Qwen2.5-7B"
+        self.model_path = os.path.join(os.path.dirname(__file__), "models/Qwen2.5-7B")
 
         print(os.path.join(self.model_path, "config.json"))
         print(os.path.exists(os.path.join(self.model_path, "config.json")))
@@ -20,10 +20,11 @@ class ModelHandler:
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_path, trust_remote_code=True)
         print("tokenizer загружен")
         self.model = AutoModelForCausalLM.from_pretrained(
-            self.model_path, 
-            trust_remote_code=True, 
-            torch_dtype=torch.float16
+            self.model_path,
+            trust_remote_code=True,
+            torch_dtype=torch.float16,
         )
+
         print(f"{self.model_path} загружена")
 
     def download_model(self):
@@ -32,7 +33,7 @@ class ModelHandler:
 
         tokenizer = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True, force_download=True)
         model = AutoModelForCausalLM.from_pretrained(self.model_name, trust_remote_code=True, force_download=True)
-
+        
         tokenizer.save_pretrained(self.model_path)
         model.save_pretrained(self.model_path)
 
