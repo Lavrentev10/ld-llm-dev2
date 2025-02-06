@@ -9,4 +9,4 @@ services:
       # - ./app/models:/app/models
     shm_size: '2gb'
     command: python app/main.py
-    cpus: 1
+    cpus: 2
