@@ -9,4 +9,3 @@ services:
     shm_size: '2gb'
     command: python app/main.py
     cpus: 2
-    
