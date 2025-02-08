@@ -6,6 +6,6 @@ services:
     container_name: qwen2-clinical-recommendations
     volumes:
       - .:/app
-    shm_size: '2gb'
+    shm_size: '32gb'
     command: python app/main.py
-    cpus: 2
+    cpus: 8

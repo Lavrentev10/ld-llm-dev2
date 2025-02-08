@@ -22,7 +22,7 @@ class ModelHandler:
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_path,
             trust_remote_code=True,
-            torch_dtype=torch.float16,
+            torch_dtype=torch.float32,
         )
 
         print(f"{self.model_path} загружена")
