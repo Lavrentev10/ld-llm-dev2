@@ -1,11 +1,9 @@
 version: '3.8'
-
 services:
-  app:
+  medical_recommendation:
     build: .
-    container_name: qwen2-clinical-recommendations
+    ports:
+      - "9000:8000"
     volumes:
       - .:/app
-    shm_size: '32gb'
-    command: python app/main.py
-    cpus: 8
+    restart: on-failure
