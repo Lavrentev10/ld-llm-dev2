@@ -7,7 +7,7 @@ import torch
 from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-DATA_FILE = "clinical_recommendations.json"
+DATA_FILE = "data/clinical_recommendations.json"
 INDEX_FILE = "faiss_index.bin"
 EMBEDDINGS_FILE = "embeddings.pkl"
 MODEL_PATH = "./models/all-MiniLM-L6-v2"
