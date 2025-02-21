@@ -42,21 +42,22 @@ class MedicalRecommendationSystem:
     def index_data(self, file_path=DATA_FILE):
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        
+
         self.recommendations = []
         texts = []
-        
+
         for entry in data:
             diagnosis = entry["diagnosis"]
             for rec in entry["recommendations"]:
                 self.recommendations.append((diagnosis, rec))
-                texts.append(f"{diagnosis}: {rec}")
-        
+                texts.append(diagnosis)
+
         embeddings = self.text_model.encode(texts, convert_to_numpy=True)
-        
-        self.index = faiss.IndexFlatL2(self.dimension)
+        embeddings = embeddings / np.linalg.norm(embeddings, axis=1, keepdims=True)
+
+        self.index = faiss.IndexFlatIP(self.dimension)
         self.index.add(embeddings)
-        
+
         faiss.write_index(self.index, INDEX_FILE)
         with open(EMBEDDINGS_FILE, "wb") as f:
             pickle.dump(self.recommendations, f)
@@ -69,23 +70,22 @@ class MedicalRecommendationSystem:
         results = []
         for diagnosis in diagnoses:
             query_embedding = self.text_model.encode([diagnosis], convert_to_numpy=True)
+            query_embedding = query_embedding / np.linalg.norm(query_embedding)
+
             distances, indices = self.index.search(query_embedding, top_k)
 
             if indices[0][0] != -1:
                 best_match = self.recommendations[indices[0][0]][1]
-                similarity = distances[0][0]
+                similarity = 1 - distances[0][0]
                 print(f"Для диагноза \"{diagnosis}\" найдена рекомендация: {best_match} (Сходство: {similarity:.4f})")
             else:
                 best_match = "Нет данных"
-                similarity = 0
                 print(f"Для диагноза \"{diagnosis}\" нет данных в индексе.")
 
             results.append(best_match)
 
         return results
 
-        
-        return results
 
     def generate_combined_recommendation(self, recommendations):
 
@@ -113,6 +113,8 @@ if __name__ == "__main__":
     if not os.path.exists(INDEX_FILE):
         system.index_data()
     
-    input_diagnoses = ["Гипертония", "Сахарный диабет"]
+    input_diagnoses = ["Гипертрофическая кардиомиопатия (ГКМП) с обструкцией ВТЛЖ",
+        "Фибрилляция передсердий при ГКМП", "Страница конфигурации слота"]
+
     result = system.process_diagnoses(input_diagnoses)
     print(f"\nИтоговая рекомендация:\n{result}")
