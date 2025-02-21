@@ -87,25 +87,56 @@ class MedicalRecommendationSystem:
         return results
 
 
-    def generate_combined_recommendation(self, recommendations):
+    def generate_combined_recommendation(self, recommendations, diagnoses):
+        prompt = f"Диагнозы: {'; '.join(map(str, diagnoses))}\n"
 
-        prompt = "\n".join([f"Рекомендация: {rec}" for rec in recommendations])
-        prompt += "\nСоздай единую, непротиворечивую рекомендацию на основе данных выше."
-        # print("Промпт:", prompt)
+# ======================= Исправить перечисление диагнозов и рекомендаций ========================
+
+        # prompt += "\n".join([f"Рекомендация: {rec}" for rec in recommendations])
+        prompt += f"Рекомендации: {'; '.join(map(str,recommendations))}\n"
+
+        prompt += "Осложнения: \n"
+
+        prompt += """
+На основе предоставленных данных о диагнозах, осложнениях и клинических рекомендациях сгенерируй бланк осмотра пациента. Бланк должен быть составлен строго по медицинским стандартам, без упрощенной терминологии и неуместных вставок. Если встречаются слова или фразы, не относящиеся к медицинскому осмотру, полностью игнорируй их.
+
+Структура бланка осмотра:
+
+    1) Жалобы:
+        Сформулируй жалобы, основываясь на переданных диагнозах и осложнениях.
+    2) Анамнез заболевания:
+        Опиши, в течение скольки дней считает себя больным и с чем связывает заболевание. Не используй слово «пациент».
+    3) Объективный осмотр:
+        Заполни данные осмотра в соответствии с диагнозами и осложнениями, опираясь на медицинские стандарты.
+    4) Диагноз:
+        Укажи диагноз, включая все осложнения.
+    5) Код диагноза по МКБ-10:
+        Укажи соответствующий код.
+    6) Рекомендовано:
+        На основе всех предоставленных рекомендаций составь единую итоговую рекомендацию, устранив возможные противоречия. Учитывай все осложнения.
+    7) Лабораторные обследования:
+        Укажи необходимые исследования, если они требуются по диагнозу.
+    8) Консультации:
+        Укажи специалистов, консультация которых необходима.
+        
+        """
+        
+        
+        print("\nПромпт:\n", prompt)
         
         inputs = self.gen_tokenizer(prompt, return_tensors="pt")
-        outputs = self.gen_model.generate(**inputs, max_new_tokens=200,
+        outputs = self.gen_model.generate(**inputs, max_new_tokens=500,
             do_sample=False, num_beams=1, pad_token_id=self.gen_tokenizer.eos_token_id)
         
-        response = self.gen_tokenizer.decode(outputs[0],
-            skip_special_tokens=True).split("Создай единую, непротиворечивую рекомендацию на основе данных выше.")[-1].strip()
-
+        # response = self.gen_tokenizer.decode(outputs[0],
+        #     skip_special_tokens=True).split("Создай единую, непротиворечивую рекомендацию на основе данных выше.")[-1].strip()
+        response = self.gen_tokenizer.decode(outputs[0], skip_special_tokens=True)
         return response
 
     def process_diagnoses(self, diagnoses):
 
         found_recommendations = self.search_recommendations(diagnoses)
-        final_recommendation = self.generate_combined_recommendation(found_recommendations)
+        final_recommendation = self.generate_combined_recommendation(found_recommendations, diagnoses)
         return final_recommendation
 
 if __name__ == "__main__":
@@ -114,7 +145,9 @@ if __name__ == "__main__":
         system.index_data()
     
     input_diagnoses = ["Гипертрофическая кардиомиопатия (ГКМП) с обструкцией ВТЛЖ",
-        "Фибрилляция передсердий при ГКМП", "Страница конфигурации слота"]
+        "Фибрилляция передсердий при ГКМП",]
+    
+
 
     result = system.process_diagnoses(input_diagnoses)
     print(f"\nИтоговая рекомендация:\n{result}")
